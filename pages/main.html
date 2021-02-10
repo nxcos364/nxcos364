@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>文件管理器</title>
+  <!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"> -->
+  <script type="text/javascript" src="/lib/import-core.js?v=2020.08.09"></script>
+  <script type="text/javascript" src="./components/components.main.js?v=2020.11.15"></script>
+  <script type="text/javascript" src="/lib/apis/fsapi.js?v=2020.08.09"></script>
+  <script type="text/javascript" src="/lib/apis/fpmsapi.js?v=2020.08.09"></script>
+  <script type="text/javascript" src="/lib/apis/userapi.js?v=2020.08.09"></script>
+  <script type="text/javascript" src="/lib/apis/preview.js?v=2020.08.09"></script>
+  <link rel="stylesheet" type="text/css" href="./components/components.main.css?v=2020.11.15">
+  <style type="text/css">  .ivu-layout {  height: 100%; }  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div class="layout">
+      <Layout>
+        <Sider width="110">
+          <div style="padding: 8px;text-align: center;">
+            <Dropdown @on-click='onDropdownClick' transfer>
+              <div>
+                <Icon type="md-flower" class="cs_p" :style="{'font-size':'48px',color:'#c9ccd0'}"></Icon>
+                <a href="javascript:void(0)" class="d_block mg_b_5" style="color: rgb(201, 204, 208);line-height: 20px;">{{currentAccount.UserName}}</a>
+              </div>
+              <Dropdown-Menu slot="list">
+                <Dropdown-Item name='logout'>注销登录</Dropdown-Item>
+              </Dropdown-Menu>
+            </Dropdown>
+          </div>
+          <i-menu :active-name="currentMenu" @on-select='function(n){currentMenu=n;}' theme="dark" width="auto">
+            <Menu-Item name="file-list">
+              <Icon type="ios-navigate"></Icon> <span>文件</span>
+            </Menu-Item>
+            <Menu-Item name="sys-setting">
+              <Icon type="ios-settings"></Icon> <span>设置</span>
+            </Menu-Item>
+          </i-menu>
+        </Sider>
+        <Layout>
+          <i-content :style="{background: '#fff', minHeight: '220px', height:'100%'}">
+            <component v-bind:is="currentMenu"></component>
+          </i-content>
+        </Layout>
+      </Layout>
+    </div>
+  </div>
+
+</body>
+<script type="text/javascript">
+  let v = new Vue({
+    data: function () {
+      return {
+        loading: true,
+        currentMenu: 'file-list',
+        currentAccount: {
+          UserType: '',
+          UserName: '',
+          CtTime: '',
+        },
+      }
+    },
+    computed: {
+    },
+    methods: {
+      onDropdownClick: function (name) {
+        if (name == 'logout') {
+          $userApi.logout().then(function (data) {
+            $apitools.destroySession();
+            window.location.replace('/');
+          }).catch(function (err) {
+            v.$Message.error(err.toString());
+          })
+        }
+      },
+      // 加载当前账户信息
+      doInitCurrentAccountInfo: function () {
+        let _ = this;
+        let session = $apitools.getSession();
+        if (session && session.UserID) {
+          $userApi.queryuser(session.UserID).then(function (data) {
+            if (data) {
+              _.$set(_, 'currentAccount', JSON.parse(data));
+            }
+          }).catch(function (err) {
+            _.$Message.error(err.toString());
+          })
+        }
+      }
+    },
+    created: function () {
+      this.doInitCurrentAccountInfo();
+    },
+    watch: {
+
+    }
+  }).$mount('#app');
+
+</script>
+
+</html>
